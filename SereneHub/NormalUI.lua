@@ -1,49 +1,28 @@
 local SereneUI = loadstring(game:HttpGet("https://raw.githubusercontent.com/sc0t6/SereneUI/main/serenelib.lua"))()
 
-local Window = SereneUI:CreateWindow({
-    Title = "SereneUI V2",
-    Size = UDim2.fromOffset(520,420)
-})
+local Window = SereneUI:CreateWindow("SereneUI Demo")
 
-local Main = Window:CreateTab("Main")
-local Player = Main:CreateSection("Player")
+local MainTab = Window:CreateTab("Main")
+local Section = MainTab:CreateSection("Player")
 
-Player:Button({
-    Name = "Print Button Test",
-    Color = "blue",
-    Callback = function()
-        print("Hello!")
-    end
-})
+Section:Button("Print Hello","blue",function()
+	print("Hello!")
+end)
 
-Player:Toggle({
-    Name = "Toggle Test",
-    Default = false,
-    Callback = function(v)
-        v = print("ive still not done it")
-    end
-})
+Section:Toggle("Fly",function(state)
+	print("Fly:",state)
+end)
 
-Player:Slider({
-    Name = "Slider test",
-    Min = 0,
-    Max = 100,
-    Default = 16,
-    Callback = function(v)
-        v = print("ive still not done it")
-    end
-})
+Section:Slider("Speed",0,100,function(value)
+	print(value)
+end)
 
-Player:Dropdown({
-    Name = "DropDown Test",
-    Options = {"Test 1","Test 2","Test 3"},
-    Callback = function(v)
-        v = print("ive still not done it")
-    end
-})
+Section:Textbox("Enter Name",function(text)
+	print(text)
+end)
 
-SereneUI:Notify({
-    Title = "SereneUI",
-    Text = "Loaded successfully",
-    Duration = 4
-})
+Section:Dropdown("Select Fruit",{"Apple","Banana","Orange"},function(choice)
+	print(choice)
+end)
+
+SereneUI:Notify("SereneUI","Loaded Successfully!",5)
