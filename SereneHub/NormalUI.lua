@@ -313,12 +313,14 @@ local espObjects = {}
 
 local function ClearESP()
     for _, data in pairs(espObjects) do
-        for _, obj in pairs(data) do
-            if typeof(obj) == "Instance" then
-                obj:Destroy()
-            elseif type(obj) == "table" and obj.Remove then
-                obj:Remove()
-            end
+        for key, obj in pairs(data) do
+            pcall(function()
+                if typeof(obj) == "Instance" then
+                    obj:Destroy()
+                else
+                    obj:Remove()
+                end
+            end)
         end
     end
     espObjects = {}
@@ -331,58 +333,54 @@ local function CreateESPForPlayer(player)
     espObjects[player] = {}
     local data = espObjects[player]
 
-    if Settings.Visuals.BoxESP or Settings.Visuals.NameESP or Settings.Visuals.Tracers or Settings.Visuals.Distance then
-        data.BoxOutline = Drawing.new("Square")
-        data.BoxOutline.Thickness = 1
-        data.BoxOutline.Filled = false
-        data.BoxOutline.Color = Settings.Visuals.ESPColor
-        data.BoxOutline.Visible = false
-        data.BoxOutline.ZIndex = 5
+    data.BoxOutline = Drawing.new("Square")
+    data.BoxOutline.Thickness = 1
+    data.BoxOutline.Filled = false
+    data.BoxOutline.Color = Settings.Visuals.ESPColor
+    data.BoxOutline.Visible = false
+    data.BoxOutline.ZIndex = 5
 
-        data.NameTag = Drawing.new("Text")
-        data.NameTag.Size = 13
-        data.NameTag.Center = true
-        data.NameTag.Outline = true
-        data.NameTag.Color = Color3.fromRGB(255, 255, 255)
-        data.NameTag.Visible = false
-        data.NameTag.ZIndex = 6
+    data.NameTag = Drawing.new("Text")
+    data.NameTag.Size = 13
+    data.NameTag.Center = true
+    data.NameTag.Outline = true
+    data.NameTag.Color = Color3.fromRGB(255, 255, 255)
+    data.NameTag.Visible = false
+    data.NameTag.ZIndex = 6
 
-        data.DistTag = Drawing.new("Text")
-        data.DistTag.Size = 11
-        data.DistTag.Center = true
-        data.DistTag.Outline = true
-        data.DistTag.Color = Color3.fromRGB(200, 200, 200)
-        data.DistTag.Visible = false
-        data.DistTag.ZIndex = 6
+    data.DistTag = Drawing.new("Text")
+    data.DistTag.Size = 11
+    data.DistTag.Center = true
+    data.DistTag.Outline = true
+    data.DistTag.Color = Color3.fromRGB(200, 200, 200)
+    data.DistTag.Visible = false
+    data.DistTag.ZIndex = 6
 
-        data.Tracer = Drawing.new("Line")
-        data.Tracer.Thickness = 1
-        data.Tracer.Color = Settings.Visuals.ESPColor
-        data.Tracer.Visible = false
-        data.Tracer.ZIndex = 4
+    data.Tracer = Drawing.new("Line")
+    data.Tracer.Thickness = 1
+    data.Tracer.Color = Settings.Visuals.ESPColor
+    data.Tracer.Visible = false
+    data.Tracer.ZIndex = 4
 
-        data.HealthBG = Drawing.new("Line")
-        data.HealthBG.Thickness = 3
-        data.HealthBG.Color = Color3.fromRGB(30, 30, 30)
-        data.HealthBG.Visible = false
-        data.HealthBG.ZIndex = 5
+    data.HealthBG = Drawing.new("Line")
+    data.HealthBG.Thickness = 3
+    data.HealthBG.Color = Color3.fromRGB(30, 30, 30)
+    data.HealthBG.Visible = false
+    data.HealthBG.ZIndex = 5
 
-        data.HealthBar = Drawing.new("Line")
-        data.HealthBar.Thickness = 2
-        data.HealthBar.Color = Color3.fromRGB(80, 255, 80)
-        data.HealthBar.Visible = false
-        data.HealthBar.ZIndex = 6
-    end
+    data.HealthBar = Drawing.new("Line")
+    data.HealthBar.Thickness = 2
+    data.HealthBar.Color = Color3.fromRGB(80, 255, 80)
+    data.HealthBar.Visible = false
+    data.HealthBar.ZIndex = 6
 
-    if Settings.Visuals.Chams then
-        data.Highlight = Instance.new("Highlight")
-        data.Highlight.Name = "SereneChams"
-        data.Highlight.FillColor = Settings.Visuals.ChamsColor
-        data.Highlight.OutlineColor = Settings.Visuals.ChamsColor
-        data.Highlight.FillTransparency = Settings.Visuals.ChamsFillTransparency
-        data.Highlight.OutlineTransparency = Settings.Visuals.ChamsOutlineTransparency
-        data.Highlight.DepthMode = Enum.HighlightDepthMode.AlwaysOnTop
-    end
+    data.Highlight = Instance.new("Highlight")
+    data.Highlight.Name = "SereneChams"
+    data.Highlight.FillColor = Settings.Visuals.ChamsColor
+    data.Highlight.OutlineColor = Settings.Visuals.ChamsColor
+    data.Highlight.FillTransparency = Settings.Visuals.ChamsFillTransparency
+    data.Highlight.OutlineTransparency = Settings.Visuals.ChamsOutlineTransparency
+    data.Highlight.DepthMode = Enum.HighlightDepthMode.AlwaysOnTop
 end
 
 local function UpdateESP()
@@ -524,11 +522,13 @@ end)
 Players.PlayerRemoving:Connect(function(player)
     if espObjects[player] then
         for _, obj in pairs(espObjects[player]) do
-            if typeof(obj) == "Instance" then
-                obj:Destroy()
-            elseif type(obj) == "table" and obj.Remove then
-                obj:Remove()
-            end
+            pcall(function()
+                if typeof(obj) == "Instance" then
+                    obj:Destroy()
+                else
+                    obj:Remove()
+                end
+            end)
         end
         espObjects[player] = nil
     end
@@ -816,7 +816,6 @@ VisualsTab:CreateToggle({
     Flag = "BoxESP",
     Callback = function(state)
         Settings.Visuals.BoxESP = state
-        RefreshAllESP()
     end,
 })
 
@@ -826,7 +825,6 @@ VisualsTab:CreateToggle({
     Flag = "NameESP",
     Callback = function(state)
         Settings.Visuals.NameESP = state
-        RefreshAllESP()
     end,
 })
 
@@ -836,7 +834,6 @@ VisualsTab:CreateToggle({
     Flag = "HealthBar",
     Callback = function(state)
         Settings.Visuals.HealthBar = state
-        RefreshAllESP()
     end,
 })
 
@@ -846,7 +843,6 @@ VisualsTab:CreateToggle({
     Flag = "Tracers",
     Callback = function(state)
         Settings.Visuals.Tracers = state
-        RefreshAllESP()
     end,
 })
 
@@ -866,7 +862,6 @@ VisualsTab:CreateToggle({
     Flag = "ShowDistance",
     Callback = function(state)
         Settings.Visuals.Distance = state
-        RefreshAllESP()
     end,
 })
 
@@ -880,7 +875,6 @@ VisualsTab:CreateToggle({
     Tooltip = "Highlight players through walls",
     Callback = function(state)
         Settings.Visuals.Chams = state
-        RefreshAllESP()
     end,
 })
 
