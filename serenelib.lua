@@ -1,162 +1,303 @@
 local SereneUI = {}
-SereneUI.__index = SereneUI
 
--- Create ScreenGui
 local Player = game.Players.LocalPlayer
 local PlayerGui = Player:WaitForChild("PlayerGui")
 
-local ScreenGui = Instance.new("ScreenGui")
-ScreenGui.Name = "SereneUI"
-ScreenGui.Parent = PlayerGui
+local UIS = game:GetService("UserInputService")
 
-local Main = Instance.new("Frame")
-Main.Size = UDim2.new(0,350,0,400)
-Main.Position = UDim2.new(0.5,-175,0.5,-200)
-Main.BackgroundColor3 = Color3.fromRGB(25,25,25)
-Main.Parent = ScreenGui
-
-local Layout = Instance.new("UIListLayout")
-Layout.Padding = UDim.new(0,6)
-Layout.Parent = Main
-
--- Color presets
 local Colors = {
 	blue = Color3.fromRGB(0,170,255),
-	red = Color3.fromRGB(255,85,85),
-	green = Color3.fromRGB(85,255,127),
-	gray = Color3.fromRGB(60,60,60)
+	red = Color3.fromRGB(255,80,80),
+	green = Color3.fromRGB(80,255,120),
+	gray = Color3.fromRGB(50,50,50)
 }
 
-function SereneUI:Label(text)
-	local Label = Instance.new("TextLabel")
-	Label.Size = UDim2.new(1,-10,0,30)
-	Label.BackgroundTransparency = 1
-	Label.Text = text
-	Label.TextColor3 = Color3.new(1,1,1)
-	Label.Font = Enum.Font.Gotham
-	Label.TextSize = 14
-	Label.Parent = Main
-end
+-- SCREEN GUI
+local ScreenGui = Instance.new("ScreenGui")
+ScreenGui.Name = "SereneUI"
+ScreenGui.ResetOnSpawn = false
+ScreenGui.Parent = PlayerGui
 
-function SereneUI:Button(text,color,callback)
-	local Button = Instance.new("TextButton")
+-- NOTIFICATION HOLDER
+local NotifHolder = Instance.new("Frame")
+NotifHolder.Size = UDim2.new(0,300,1,0)
+NotifHolder.Position = UDim2.new(1,-310,0,10)
+NotifHolder.BackgroundTransparency = 1
+NotifHolder.Parent = ScreenGui
 
-	Button.Size = UDim2.new(1,-10,0,35)
-	Button.BackgroundColor3 = Colors[color] or Colors.gray
-	Button.TextColor3 = Color3.new(1,1,1)
-	Button.Font = Enum.Font.GothamBold
-	Button.TextSize = 14
-	Button.Text = text
-	Button.Parent = Main
+local NotifLayout = Instance.new("UIListLayout")
+NotifLayout.Padding = UDim.new(0,5)
+NotifLayout.Parent = NotifHolder
 
-	Button.MouseButton1Click:Connect(function()
-		if callback then
-			callback()
-		end
-	end)
-end
+function SereneUI:Notify(title,text,time)
 
-function SereneUI:Toggle(text,callback)
+	local Notif = Instance.new("Frame")
+	Notif.Size = UDim2.new(1,0,0,60)
+	Notif.BackgroundColor3 = Color3.fromRGB(30,30,30)
+	Notif.Parent = NotifHolder
 
-	local Toggle = Instance.new("TextButton")
-	Toggle.Size = UDim2.new(1,-10,0,35)
-	Toggle.BackgroundColor3 = Colors.gray
-	Toggle.Text = text.." : OFF"
-	Toggle.TextColor3 = Color3.new(1,1,1)
-	Toggle.Parent = Main
+	local Title = Instance.new("TextLabel")
+	Title.Text = title
+	Title.Font = Enum.Font.GothamBold
+	Title.TextSize = 16
+	Title.TextColor3 = Color3.new(1,1,1)
+	Title.BackgroundTransparency = 1
+	Title.Size = UDim2.new(1,-10,0,20)
+	Title.Position = UDim2.new(0,5,0,5)
+	Title.Parent = Notif
 
-	local state = false
+	local Desc = Instance.new("TextLabel")
+	Desc.Text = text
+	Desc.Font = Enum.Font.Gotham
+	Desc.TextSize = 14
+	Desc.TextColor3 = Color3.fromRGB(200,200,200)
+	Desc.BackgroundTransparency = 1
+	Desc.Size = UDim2.new(1,-10,0,20)
+	Desc.Position = UDim2.new(0,5,0,30)
+	Desc.Parent = Notif
 
-	Toggle.MouseButton1Click:Connect(function()
-		state = not state
-		Toggle.Text = text.." : "..(state and "ON" or "OFF")
-
-		if callback then
-			callback(state)
-		end
-	end)
-
-end
-
-function SereneUI:Textbox(placeholder,callback)
-
-	local Box = Instance.new("TextBox")
-	Box.Size = UDim2.new(1,-10,0,35)
-	Box.BackgroundColor3 = Colors.gray
-	Box.Text = ""
-	Box.PlaceholderText = placeholder
-	Box.TextColor3 = Color3.new(1,1,1)
-	Box.Parent = Main
-
-	Box.FocusLost:Connect(function()
-		if callback then
-			callback(Box.Text)
-		end
+	task.delay(time or 5,function()
+		Notif:Destroy()
 	end)
 
 end
 
-function SereneUI:Slider(text,min,max,callback)
+function SereneUI:CreateWindow(title)
 
-	local Frame = Instance.new("Frame")
-	Frame.Size = UDim2.new(1,-10,0,40)
-	Frame.BackgroundColor3 = Colors.gray
-	Frame.Parent = Main
+	local Window = {}
 
-	local Label = Instance.new("TextLabel")
-	Label.Size = UDim2.new(1,0,1,0)
-	Label.BackgroundTransparency = 1
-	Label.TextColor3 = Color3.new(1,1,1)
-	Label.Text = text.." : "..min
-	Label.Parent = Frame
+	local Main = Instance.new("Frame")
+	Main.Size = UDim2.new(0,500,0,400)
+	Main.Position = UDim2.new(0.5,-250,0.5,-200)
+	Main.BackgroundColor3 = Color3.fromRGB(25,25,25)
+	Main.Parent = ScreenGui
 
-	local value = min
+	local Top = Instance.new("TextLabel")
+	Top.Size = UDim2.new(1,0,0,30)
+	Top.BackgroundColor3 = Color3.fromRGB(20,20,20)
+	Top.Text = title
+	Top.Font = Enum.Font.GothamBold
+	Top.TextColor3 = Color3.new(1,1,1)
+	Top.Parent = Main
 
-	Frame.InputBegan:Connect(function(input)
+	-- DRAGGING
+
+	local dragging
+	local dragStart
+	local startPos
+
+	Top.InputBegan:Connect(function(input)
 		if input.UserInputType == Enum.UserInputType.MouseButton1 then
+			dragging = true
+			dragStart = input.Position
+			startPos = Main.Position
+		end
+	end)
 
-			local pos = input.Position.X
-			local size = Frame.AbsoluteSize.X
-			local start = Frame.AbsolutePosition.X
+	UIS.InputChanged:Connect(function(input)
 
-			value = math.floor(((pos-start)/size)*(max-min)+min)
+		if dragging and input.UserInputType == Enum.UserInputType.MouseMovement then
 
-			Label.Text = text.." : "..value
+			local delta = input.Position - dragStart
 
-			if callback then
-				callback(value)
+			Main.Position = UDim2.new(
+				startPos.X.Scale,
+				startPos.X.Offset + delta.X,
+				startPos.Y.Scale,
+				startPos.Y.Offset + delta.Y
+			)
+
+		end
+
+	end)
+
+	UIS.InputEnded:Connect(function(input)
+		if input.UserInputType == Enum.UserInputType.MouseButton1 then
+			dragging = false
+		end
+	end)
+
+	local TabHolder = Instance.new("Frame")
+	TabHolder.Size = UDim2.new(0,120,1,-30)
+	TabHolder.Position = UDim2.new(0,0,0,30)
+	TabHolder.BackgroundColor3 = Color3.fromRGB(20,20,20)
+	TabHolder.Parent = Main
+
+	local Content = Instance.new("Frame")
+	Content.Size = UDim2.new(1,-120,1,-30)
+	Content.Position = UDim2.new(0,120,0,30)
+	Content.BackgroundTransparency = 1
+	Content.Parent = Main
+
+	local TabLayout = Instance.new("UIListLayout")
+	TabLayout.Parent = TabHolder
+
+	function Window:CreateTab(name)
+
+		local Tab = {}
+		local TabButton = Instance.new("TextButton")
+
+		TabButton.Size = UDim2.new(1,0,0,30)
+		TabButton.Text = name
+		TabButton.BackgroundColor3 = Color3.fromRGB(40,40,40)
+		TabButton.TextColor3 = Color3.new(1,1,1)
+		TabButton.Parent = TabHolder
+
+		local Page = Instance.new("Frame")
+		Page.Size = UDim2.new(1,0,1,0)
+		Page.Visible = false
+		Page.BackgroundTransparency = 1
+		Page.Parent = Content
+
+		local Layout = Instance.new("UIListLayout")
+		Layout.Padding = UDim.new(0,5)
+		Layout.Parent = Page
+
+		TabButton.MouseButton1Click:Connect(function()
+
+			for _,v in pairs(Content:GetChildren()) do
+				if v:IsA("Frame") then
+					v.Visible = false
+				end
 			end
 
+			Page.Visible = true
+
+		end)
+
+		function Tab:CreateSection(title)
+
+			local Section = {}
+
+			local Frame = Instance.new("Frame")
+			Frame.Size = UDim2.new(1,-10,0,200)
+			Frame.BackgroundColor3 = Color3.fromRGB(35,35,35)
+			Frame.Parent = Page
+
+			local Title = Instance.new("TextLabel")
+			Title.Text = title
+			Title.Font = Enum.Font.GothamBold
+			Title.TextColor3 = Color3.new(1,1,1)
+			Title.BackgroundTransparency = 1
+			Title.Size = UDim2.new(1,0,0,20)
+			Title.Parent = Frame
+
+			local Layout = Instance.new("UIListLayout")
+			Layout.Padding = UDim.new(0,4)
+			Layout.Parent = Frame
+
+			function Section:Button(text,color,callback)
+
+				local Btn = Instance.new("TextButton")
+				Btn.Size = UDim2.new(1,-10,0,30)
+				Btn.BackgroundColor3 = Colors[color] or Colors.gray
+				Btn.Text = text
+				Btn.TextColor3 = Color3.new(1,1,1)
+				Btn.Parent = Frame
+
+				Btn.MouseButton1Click:Connect(function()
+					if callback then callback() end
+				end)
+
+			end
+
+			function Section:Toggle(text,callback)
+
+				local state = false
+
+				local Btn = Instance.new("TextButton")
+				Btn.Size = UDim2.new(1,-10,0,30)
+				Btn.BackgroundColor3 = Colors.gray
+				Btn.Text = text.." : OFF"
+				Btn.TextColor3 = Color3.new(1,1,1)
+				Btn.Parent = Frame
+
+				Btn.MouseButton1Click:Connect(function()
+
+					state = not state
+					Btn.Text = text.." : "..(state and "ON" or "OFF")
+
+					if callback then
+						callback(state)
+					end
+
+				end)
+
+			end
+
+			function Section:Textbox(name,callback)
+
+				local Box = Instance.new("TextBox")
+				Box.Size = UDim2.new(1,-10,0,30)
+				Box.PlaceholderText = name
+				Box.Text = ""
+				Box.BackgroundColor3 = Colors.gray
+				Box.TextColor3 = Color3.new(1,1,1)
+				Box.Parent = Frame
+
+				Box.FocusLost:Connect(function()
+					if callback then callback(Box.Text) end
+				end)
+
+			end
+
+			function Section:Slider(text,min,max,callback)
+
+				local Btn = Instance.new("TextButton")
+				Btn.Size = UDim2.new(1,-10,0,30)
+				Btn.BackgroundColor3 = Colors.gray
+				Btn.Text = text.." : "..min
+				Btn.TextColor3 = Color3.new(1,1,1)
+				Btn.Parent = Frame
+
+				local value = min
+
+				Btn.MouseButton1Click:Connect(function()
+
+					value += 1
+
+					if value > max then
+						value = min
+					end
+
+					Btn.Text = text.." : "..value
+
+					if callback then callback(value) end
+
+				end)
+
+			end
+
+			function Section:Dropdown(text,options,callback)
+
+				local Btn = Instance.new("TextButton")
+				Btn.Size = UDim2.new(1,-10,0,30)
+				Btn.BackgroundColor3 = Colors.gray
+				Btn.Text = text
+				Btn.TextColor3 = Color3.new(1,1,1)
+				Btn.Parent = Frame
+
+				Btn.MouseButton1Click:Connect(function()
+
+					local choice = options[math.random(1,#options)]
+					Btn.Text = text.." : "..choice
+
+					if callback then callback(choice) end
+
+				end)
+
+			end
+
+			return Section
+
 		end
-	end)
+
+		return Tab
+
+	end
+
+	return Window
 
 end
 
-function SereneUI:ColorPicker(callback)
-
-	local Button = Instance.new("TextButton")
-	Button.Size = UDim2.new(1,-10,0,35)
-	Button.BackgroundColor3 = Color3.fromRGB(0,255,255)
-	Button.Text = "Pick Color"
-	Button.TextColor3 = Color3.new(0,0,0)
-	Button.Parent = Main
-
-	Button.MouseButton1Click:Connect(function()
-
-		local color = Color3.fromRGB(
-			math.random(0,255),
-			math.random(0,255),
-			math.random(0,255)
-		)
-
-		Button.BackgroundColor3 = color
-
-		if callback then
-			callback(color)
-		end
-
-	end)
-
-end
-
-return setmetatable({},SereneUI)
+return SereneUI
