@@ -1,26 +1,8 @@
---[[
-    ╔═══════════════════════════════════════════════════════════╗
-    ║                      SereneUI v1.0                       ║
-    ║         A Modern, Polished UI Library for Roblox         ║
-    ║                                                          ║
-    ║  Features:                                               ║
-    ║   • Smooth TweenService animations on all interactions   ║
-    ║   • Dark theme with customizable accent colors           ║
-    ║   • Built-in notification system with stacking           ║
-    ║   • Config saving / loading via DataStore or file        ║
-    ║   • Draggable windows, keybind toggle, tooltips          ║
-    ║   • UI scaling support & optional background blur        ║
-    ║   • Elements: Button, Toggle, Slider, Dropdown,          ║
-    ║     Keybind, TextBox, Label, Paragraph, Section          ║
-    ╚═══════════════════════════════════════════════════════════╝
---]]
+
 
 local SereneUI = {}
 SereneUI.__index = SereneUI
 
----------------------------------------------------------------------------
--- Services
----------------------------------------------------------------------------
 local Players         = game:GetService("Players")
 local TweenService    = game:GetService("TweenService")
 local UserInputService= game:GetService("UserInputService")
@@ -32,9 +14,6 @@ local CoreGui         = game:GetService("CoreGui")
 local Player   = Players.LocalPlayer
 local Mouse    = Player:GetMouse()
 
----------------------------------------------------------------------------
--- Defaults & Theme
----------------------------------------------------------------------------
 local DEFAULT_THEME = {
     Background        = Color3.fromRGB(18, 18, 24),
     Surface           = Color3.fromRGB(24, 24, 32),
@@ -63,9 +42,6 @@ local DEFAULT_THEME = {
     AnimationEasing   = Enum.EasingStyle.Quint,
 }
 
----------------------------------------------------------------------------
--- Utility helpers
----------------------------------------------------------------------------
 local Util = {}
 
 function Util.Tween(instance, props, duration, easingStyle, easingDirection)
@@ -205,9 +181,6 @@ function Util.DeepCopy(t)
     return copy
 end
 
----------------------------------------------------------------------------
--- Tooltip System
----------------------------------------------------------------------------
 local TooltipModule = {}
 
 function TooltipModule.Init(screenGui, theme)
@@ -266,9 +239,6 @@ function TooltipModule.Bind(frame, text)
     end)
 end
 
----------------------------------------------------------------------------
--- Notification System
----------------------------------------------------------------------------
 local NotificationModule = {}
 
 function NotificationModule.Init(screenGui, theme)
@@ -314,7 +284,6 @@ function NotificationModule.Send(options)
     Util.Stroke(card, theme.Border, 1, 0.7)
     Util.Shadow(card, 16, 0.6)
 
-    -- Accent bar on the left
     Util.Create("Frame", {
         Name = "AccentBar",
         BackgroundColor3 = accentColor,
@@ -334,7 +303,6 @@ function NotificationModule.Send(options)
     Util.Padding(content, 10, 10, 10, 10)
     Util.ListLayout(content, 3)
 
-    -- Icon + Title row
     local titleRow = Util.Create("Frame", {
         Name = "TitleRow",
         BackgroundTransparency = 1,
@@ -385,7 +353,6 @@ function NotificationModule.Send(options)
         })
     end
 
-    -- Progress bar
     local progressBar = Util.Create("Frame", {
         Name = "Progress",
         BackgroundColor3 = accentColor,
@@ -397,7 +364,6 @@ function NotificationModule.Send(options)
         Parent = card,
     })
 
-    -- Slide in animation
     card.BackgroundTransparency = 1
     card.Position = UDim2.new(1, 40, 0, 0)
     Util.Tween(card, {
@@ -405,7 +371,6 @@ function NotificationModule.Send(options)
         Position = UDim2.new(0, 0, 0, 0),
     }, 0.35, Enum.EasingStyle.Back)
 
-    -- Make children visible with a slight delay
     for _, child in ipairs(card:GetDescendants()) do
         if child:IsA("TextLabel") then
             local orig = child.TextTransparency
@@ -416,10 +381,8 @@ function NotificationModule.Send(options)
         end
     end
 
-    -- Progress shrink
     Util.Tween(progressBar, { Size = UDim2.new(0, 0, 0, 2) }, duration, Enum.EasingStyle.Linear)
 
-    -- Auto dismiss
     task.delay(duration, function()
         Util.Tween(card, {
             BackgroundTransparency = 1,
@@ -431,9 +394,6 @@ function NotificationModule.Send(options)
     end)
 end
 
----------------------------------------------------------------------------
--- Config System (JSON file via writefile / readfile if available)
----------------------------------------------------------------------------
 local ConfigModule = {}
 
 function ConfigModule.Init(libraryName)
@@ -489,9 +449,6 @@ function ConfigModule.Load(fileName)
     return false
 end
 
----------------------------------------------------------------------------
--- Blur Effect
----------------------------------------------------------------------------
 local BlurModule = {}
 
 function BlurModule.Init(enabled)
@@ -524,9 +481,6 @@ function BlurModule.Destroy()
     end
 end
 
----------------------------------------------------------------------------
--- SereneUI.CreateWindow
----------------------------------------------------------------------------
 function SereneUI:CreateWindow(options)
     options = options or {}
     local title       = options.Title or "SereneUI"
@@ -538,7 +492,6 @@ function SereneUI:CreateWindow(options)
     local scaleFactor = options.UIScale or 1
     local configName  = options.ConfigName or title
 
-    -- Merge custom theme colours
     if options.Theme then
         for k, v in pairs(options.Theme) do
             theme[k] = v
@@ -546,7 +499,6 @@ function SereneUI:CreateWindow(options)
     end
     if options.AccentColor then
         theme.Accent = options.AccentColor
-        -- Derive hover and dark shades automatically
         local r, g, b = options.AccentColor.R, options.AccentColor.G, options.AccentColor.B
         theme.AccentHover = Color3.new(
             math.clamp(r + 0.1, 0, 1),
@@ -560,13 +512,9 @@ function SereneUI:CreateWindow(options)
         )
     end
 
-    -- Init sub-systems
     ConfigModule.Init(configName)
     BlurModule.Init(blurEnabled)
 
-    ---------------------------------------------------------------------------
-    -- ScreenGui
-    ---------------------------------------------------------------------------
     local screenGui = Util.Create("ScreenGui", {
         Name = "SereneUI",
         ResetOnSpawn = false,
@@ -574,13 +522,11 @@ function SereneUI:CreateWindow(options)
         IgnoreGuiInset = true,
         DisplayOrder = 100,
     })
-    -- Try CoreGui, fall back to PlayerGui
     pcall(function() screenGui.Parent = CoreGui end)
     if not screenGui.Parent then
         screenGui.Parent = Player:WaitForChild("PlayerGui")
     end
 
-    -- UI Scale
     if scaleFactor ~= 1 then
         Util.Create("UIScale", {
             Scale = scaleFactor,
@@ -588,13 +534,9 @@ function SereneUI:CreateWindow(options)
         })
     end
 
-    -- Init tooltip & notification on this ScreenGui
     TooltipModule.Init(screenGui, theme)
     NotificationModule.Init(screenGui, theme)
 
-    ---------------------------------------------------------------------------
-    -- Main Window Frame
-    ---------------------------------------------------------------------------
     local mainFrame = Util.Create("Frame", {
         Name = "MainWindow",
         AnchorPoint = Vector2.new(0.5, 0.5),
@@ -608,9 +550,6 @@ function SereneUI:CreateWindow(options)
     Util.Stroke(mainFrame, theme.Border, 1, 0.6)
     Util.Shadow(mainFrame, 40, 0.45)
 
-    ---------------------------------------------------------------------------
-    -- Open Animation
-    ---------------------------------------------------------------------------
     mainFrame.Size = UDim2.new(0, 0, 0, 0)
     mainFrame.BackgroundTransparency = 1
     task.defer(function()
@@ -621,9 +560,6 @@ function SereneUI:CreateWindow(options)
         BlurModule.Show()
     end)
 
-    ---------------------------------------------------------------------------
-    -- Titlebar
-    ---------------------------------------------------------------------------
     local titleBar = Util.Create("Frame", {
         Name = "TitleBar",
         BackgroundColor3 = theme.Surface,
@@ -631,12 +567,11 @@ function SereneUI:CreateWindow(options)
         BorderSizePixel = 0,
         Parent = mainFrame,
     })
-    -- Only round top corners
     Util.Create("UICorner", {
         CornerRadius = theme.CornerRadiusLarge,
         Parent = titleBar,
     })
-    -- Fill bottom corners with a small rect
+
     Util.Create("Frame", {
         Name = "BottomFill",
         BackgroundColor3 = theme.Surface,
@@ -646,7 +581,6 @@ function SereneUI:CreateWindow(options)
         Parent = titleBar,
     })
 
-    -- Accent line under title
     Util.Create("Frame", {
         Name = "AccentLine",
         BackgroundColor3 = theme.Accent,
@@ -657,7 +591,6 @@ function SereneUI:CreateWindow(options)
         Parent = titleBar,
     })
 
-    -- Logo / icon circle
     local logoCircle = Util.Create("Frame", {
         Name = "LogoCircle",
         BackgroundColor3 = theme.Accent,
@@ -676,7 +609,6 @@ function SereneUI:CreateWindow(options)
         Parent = logoCircle,
     })
 
-    -- Title label
     Util.Create("TextLabel", {
         Name = "Title",
         BackgroundTransparency = 1,
@@ -690,7 +622,7 @@ function SereneUI:CreateWindow(options)
         Parent = titleBar,
     })
 
-    -- Subtitle
+
     Util.Create("TextLabel", {
         Name = "Subtitle",
         BackgroundTransparency = 1,
@@ -704,7 +636,6 @@ function SereneUI:CreateWindow(options)
         Parent = titleBar,
     })
 
-    -- Close button
     local closeBtn = Util.Create("TextButton", {
         Name = "Close",
         BackgroundColor3 = theme.Error,
@@ -726,7 +657,6 @@ function SereneUI:CreateWindow(options)
         Util.TweenFast(closeBtn, { BackgroundTransparency = 0.85 })
     end)
 
-    -- Minimize button
     local minBtn = Util.Create("TextButton", {
         Name = "Minimize",
         BackgroundColor3 = theme.TextMuted,
@@ -748,9 +678,7 @@ function SereneUI:CreateWindow(options)
         Util.TweenFast(minBtn, { BackgroundTransparency = 0.85 })
     end)
 
-    ---------------------------------------------------------------------------
-    -- Dragging
-    ---------------------------------------------------------------------------
+    
     local dragging, dragInput, dragStart, startPos
 
     titleBar.InputBegan:Connect(function(input)
@@ -786,9 +714,6 @@ function SereneUI:CreateWindow(options)
         end
     end)
 
-    ---------------------------------------------------------------------------
-    -- Sidebar (Tab Navigation)
-    ---------------------------------------------------------------------------
     local sidebar = Util.Create("Frame", {
         Name = "Sidebar",
         BackgroundColor3 = theme.Surface,
@@ -798,7 +723,6 @@ function SereneUI:CreateWindow(options)
         Parent = mainFrame,
     })
 
-    -- Divider
     Util.Create("Frame", {
         Name = "Divider",
         BackgroundColor3 = theme.Border,
@@ -825,9 +749,6 @@ function SereneUI:CreateWindow(options)
     Util.ListLayout(tabButtonContainer, 3, nil, Enum.HorizontalAlignment.Center)
     Util.Padding(tabButtonContainer, 4, 8, 4, 8)
 
-    ---------------------------------------------------------------------------
-    -- Content Area
-    ---------------------------------------------------------------------------
     local contentArea = Util.Create("Frame", {
         Name = "ContentArea",
         BackgroundTransparency = 1,
@@ -837,9 +758,6 @@ function SereneUI:CreateWindow(options)
         Parent = mainFrame,
     })
 
-    ---------------------------------------------------------------------------
-    -- Window Object
-    ---------------------------------------------------------------------------
     local Window = {
         _screenGui = screenGui,
         _mainFrame = mainFrame,
@@ -852,9 +770,6 @@ function SereneUI:CreateWindow(options)
         _toggleKey = toggleKey,
     }
 
-    ---------------------------------------------------------------------------
-    -- Toggle Visibility (Keybind)
-    ---------------------------------------------------------------------------
     local function toggleUI()
         Window._visible = not Window._visible
         if Window._visible then
@@ -893,15 +808,11 @@ function SereneUI:CreateWindow(options)
         toggleUI()
     end)
 
-    ---------------------------------------------------------------------------
-    -- Window:CreateTab
-    ---------------------------------------------------------------------------
     function Window:CreateTab(tabOptions)
         tabOptions = tabOptions or {}
         local tabName = tabOptions.Name or "Tab"
         local tabIcon = tabOptions.Icon or ""
 
-        -- Tab button in sidebar
         local tabBtn = Util.Create("TextButton", {
             Name = tabName,
             BackgroundColor3 = theme.SurfaceAlt,
@@ -915,7 +826,6 @@ function SereneUI:CreateWindow(options)
         })
         Util.Corner(tabBtn, theme.CornerRadiusSmall)
 
-        -- Icon
         if tabIcon ~= "" then
             Util.Create("TextLabel", {
                 Name = "Icon",
@@ -944,7 +854,6 @@ function SereneUI:CreateWindow(options)
             Parent = tabBtn,
         })
 
-        -- Active indicator bar
         local indicator = Util.Create("Frame", {
             Name = "Indicator",
             BackgroundColor3 = theme.Accent,
@@ -956,7 +865,6 @@ function SereneUI:CreateWindow(options)
         })
         Util.Corner(indicator, UDim.new(0, 2))
 
-        -- Content scroll frame for this tab
         local tabContent = Util.Create("ScrollingFrame", {
             Name = tabName .. "Content",
             BackgroundTransparency = 1,
@@ -985,21 +893,18 @@ function SereneUI:CreateWindow(options)
         }
 
         local function activateTab()
-            -- Deactivate current
             if self._activeTab then
                 local prev = self._activeTab
                 prev._content.Visible = false
                 Util.TweenFast(prev._btn, { BackgroundTransparency = 1 })
                 Util.TweenFast(prev._label, { TextColor3 = theme.TextSecondary })
                 Util.Tween(prev._indicator, { Size = UDim2.new(0, 3, 0, 0) }, 0.2)
-                -- Find icon and tween it
                 local prevIcon = prev._btn:FindFirstChild("Icon")
                 if prevIcon then
                     Util.TweenFast(prevIcon, { TextColor3 = theme.TextMuted })
                 end
             end
 
-            -- Activate this tab
             self._activeTab = tabObj
             tabContent.Visible = true
             Util.TweenFast(tabBtn, { BackgroundTransparency = 0.7 })
@@ -1010,7 +915,6 @@ function SereneUI:CreateWindow(options)
                 Util.TweenFast(iconLabel, { TextColor3 = theme.Accent })
             end
 
-            -- Fade-in content
             tabContent.CanvasPosition = Vector2.new(0, 0)
             for _, el in ipairs(tabContent:GetChildren()) do
                 if el:IsA("Frame") then
@@ -1022,7 +926,6 @@ function SereneUI:CreateWindow(options)
 
         tabBtn.MouseButton1Click:Connect(activateTab)
 
-        -- Hover
         tabBtn.MouseEnter:Connect(function()
             if self._activeTab ~= tabObj then
                 Util.TweenFast(tabBtn, { BackgroundTransparency = 0.8 })
@@ -1038,16 +941,11 @@ function SereneUI:CreateWindow(options)
 
         table.insert(self._tabs, tabObj)
 
-        -- Auto-select first tab
         if #self._tabs == 1 then
             task.defer(activateTab)
         end
 
-        -----------------------------------------------------------------------
-        -- Element Creation Methods (on Tab)
-        -----------------------------------------------------------------------
 
-        -- Helper: create a standard element row container
         local function makeElementRow(name, height)
             local row = Util.Create("Frame", {
                 Name = name,
@@ -1062,9 +960,6 @@ function SereneUI:CreateWindow(options)
             return row
         end
 
-        -------------------------------------------------------------------
-        -- Section
-        -------------------------------------------------------------------
         function tabObj:CreateSection(sectionOptions)
             sectionOptions = sectionOptions or {}
             local sectionName = sectionOptions.Name or "Section"
@@ -1089,8 +984,6 @@ function SereneUI:CreateWindow(options)
                 TextXAlignment = Enum.TextXAlignment.Left,
                 Parent = section,
             })
-
-            -- Thin separator line
             Util.Create("Frame", {
                 BackgroundColor3 = theme.Border,
                 BackgroundTransparency = 0.6,
@@ -1101,9 +994,6 @@ function SereneUI:CreateWindow(options)
             })
         end
 
-        -------------------------------------------------------------------
-        -- Label
-        -------------------------------------------------------------------
         function tabObj:CreateLabel(labelOptions)
             labelOptions = labelOptions or {}
             local text = labelOptions.Text or "Label"
@@ -1128,9 +1018,7 @@ function SereneUI:CreateWindow(options)
             return labelAPI
         end
 
-        -------------------------------------------------------------------
-        -- Paragraph / Info Box
-        -------------------------------------------------------------------
+
         function tabObj:CreateParagraph(pOptions)
             pOptions = pOptions or {}
             local title = pOptions.Title or "Info"
@@ -1189,9 +1077,6 @@ function SereneUI:CreateWindow(options)
             return pAPI
         end
 
-        -------------------------------------------------------------------
-        -- Button
-        -------------------------------------------------------------------
         function tabObj:CreateButton(btnOptions)
             btnOptions = btnOptions or {}
             local text = btnOptions.Text or "Button"
@@ -1223,7 +1108,6 @@ function SereneUI:CreateWindow(options)
                 Parent = btn,
             })
 
-            -- Small accent arrow
             local arrow = Util.Create("TextLabel", {
                 BackgroundTransparency = 1,
                 Size = UDim2.new(0, 24, 1, 0),
@@ -1237,7 +1121,6 @@ function SereneUI:CreateWindow(options)
 
             btn.MouseButton1Click:Connect(function()
                 Util.Ripple(row, theme)
-                -- Brief flash
                 Util.TweenFast(row, { BackgroundColor3 = theme.AccentDark })
                 task.delay(0.15, function()
                     Util.TweenFast(row, { BackgroundColor3 = theme.Card })
@@ -1254,9 +1137,6 @@ function SereneUI:CreateWindow(options)
             return btnAPI
         end
 
-        -------------------------------------------------------------------
-        -- Toggle
-        -------------------------------------------------------------------
         function tabObj:CreateToggle(tglOptions)
             tglOptions = tglOptions or {}
             local text = tglOptions.Text or "Toggle"
@@ -1280,7 +1160,6 @@ function SereneUI:CreateWindow(options)
                 Parent = row,
             })
 
-            -- Toggle track
             local track = Util.Create("Frame", {
                 Name = "Track",
                 BackgroundColor3 = theme.SurfaceAlt,
@@ -1291,7 +1170,6 @@ function SereneUI:CreateWindow(options)
             Util.Corner(track, UDim.new(1, 0))
             Util.Stroke(track, theme.Border, 1, 0.7)
 
-            -- Knob
             local knob = Util.Create("Frame", {
                 Name = "Knob",
                 BackgroundColor3 = theme.TextMuted,
@@ -1363,9 +1241,6 @@ function SereneUI:CreateWindow(options)
             return tglAPI
         end
 
-        -------------------------------------------------------------------
-        -- Slider
-        -------------------------------------------------------------------
         function tabObj:CreateSlider(sliderOptions)
             sliderOptions = sliderOptions or {}
             local text = sliderOptions.Text or "Slider"
@@ -1380,7 +1255,6 @@ function SereneUI:CreateWindow(options)
 
             local row = makeElementRow("Slider", 50)
 
-            -- Label row
             local titleLabel = Util.Create("TextLabel", {
                 BackgroundTransparency = 1,
                 Size = UDim2.new(1, -70, 0, 20),
@@ -1406,7 +1280,6 @@ function SereneUI:CreateWindow(options)
                 Parent = row,
             })
 
-            -- Track
             local sliderTrack = Util.Create("Frame", {
                 Name = "SliderTrack",
                 BackgroundColor3 = theme.SurfaceAlt,
@@ -1416,7 +1289,6 @@ function SereneUI:CreateWindow(options)
             })
             Util.Corner(sliderTrack, UDim.new(1, 0))
 
-            -- Fill
             local fill = Util.Create("Frame", {
                 Name = "Fill",
                 BackgroundColor3 = theme.Accent,
@@ -1426,7 +1298,6 @@ function SereneUI:CreateWindow(options)
             })
             Util.Corner(fill, UDim.new(1, 0))
 
-            -- Knob
             local sliderKnob = Util.Create("Frame", {
                 Name = "Knob",
                 BackgroundColor3 = Color3.fromRGB(255, 255, 255),
@@ -1443,7 +1314,6 @@ function SereneUI:CreateWindow(options)
 
             local function setValue(val, animate)
                 val = math.clamp(val, min, max)
-                -- Snap to increment
                 val = math.floor((val - min) / increment + 0.5) * increment + min
                 val = math.clamp(val, min, max)
                 currentValue = val
@@ -1464,7 +1334,6 @@ function SereneUI:CreateWindow(options)
 
             setValue(default, false)
 
-            -- Interaction
             local sliding = false
 
             local function inputUpdate(input)
@@ -1514,9 +1383,6 @@ function SereneUI:CreateWindow(options)
             return sliderAPI
         end
 
-        -------------------------------------------------------------------
-        -- Dropdown
-        -------------------------------------------------------------------
         function tabObj:CreateDropdown(ddOptions)
             ddOptions = ddOptions or {}
             local text = ddOptions.Text or "Dropdown"
@@ -1545,7 +1411,6 @@ function SereneUI:CreateWindow(options)
             Util.Stroke(row, theme.Border, 1, 0.8)
             table.insert(tabObj._elements, row)
 
-            -- Header
             local header = Util.Create("TextButton", {
                 BackgroundTransparency = 1,
                 Size = UDim2.new(1, 0, 0, 38),
@@ -1593,7 +1458,6 @@ function SereneUI:CreateWindow(options)
                 Parent = header,
             })
 
-            -- Items container
             local itemsContainer = Util.Create("Frame", {
                 Name = "Items",
                 BackgroundTransparency = 1,
@@ -1709,9 +1573,6 @@ function SereneUI:CreateWindow(options)
             return ddAPI
         end
 
-        -------------------------------------------------------------------
-        -- Keybind
-        -------------------------------------------------------------------
         function tabObj:CreateKeybind(kbOptions)
             kbOptions = kbOptions or {}
             local text = kbOptions.Text or "Keybind"
@@ -1761,7 +1622,6 @@ function SereneUI:CreateWindow(options)
 
             UserInputService.InputBegan:Connect(function(input, processed)
                 if not listening then
-                    -- Fire callback when key is pressed
                     if input.KeyCode == currentKey and not processed then
                         callback(currentKey)
                     end
@@ -1790,9 +1650,6 @@ function SereneUI:CreateWindow(options)
             return kbAPI
         end
 
-        -------------------------------------------------------------------
-        -- TextBox
-        -------------------------------------------------------------------
         function tabObj:CreateTextBox(tbOptions)
             tbOptions = tbOptions or {}
             local text = tbOptions.Text or "Input"
@@ -1871,16 +1728,10 @@ function SereneUI:CreateWindow(options)
         return tabObj
     end
 
-    ---------------------------------------------------------------------------
-    -- Window:Notify  (convenience wrapper)
-    ---------------------------------------------------------------------------
     function Window:Notify(options)
         NotificationModule.Send(options)
     end
 
-    ---------------------------------------------------------------------------
-    -- Config Wrappers
-    ---------------------------------------------------------------------------
     function Window:SaveConfig(name)
         ConfigModule.Save(name)
     end
@@ -1893,9 +1744,6 @@ function SereneUI:CreateWindow(options)
         return ConfigModule.GetFlag(flag)
     end
 
-    ---------------------------------------------------------------------------
-    -- Destroy
-    ---------------------------------------------------------------------------
     function Window:Destroy()
         BlurModule.Destroy()
         screenGui:Destroy()
@@ -1904,7 +1752,4 @@ function SereneUI:CreateWindow(options)
     return Window
 end
 
----------------------------------------------------------------------------
--- Module return
----------------------------------------------------------------------------
 return SereneUI
