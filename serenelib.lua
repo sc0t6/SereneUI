@@ -1,303 +1,209 @@
 local SereneUI = {}
+SereneUI.__index = SereneUI
 
-local Player = game.Players.LocalPlayer
+local TweenService = game:GetService("TweenService")
+local Players = game:GetService("Players")
+local Player = Players.LocalPlayer
 local PlayerGui = Player:WaitForChild("PlayerGui")
 
-local UIS = game:GetService("UserInputService")
-
-local Colors = {
-	blue = Color3.fromRGB(0,170,255),
-	red = Color3.fromRGB(255,80,80),
-	green = Color3.fromRGB(80,255,120),
-	gray = Color3.fromRGB(50,50,50)
-}
-
--- SCREEN GUI
+-- ScreenGui
 local ScreenGui = Instance.new("ScreenGui")
 ScreenGui.Name = "SereneUI"
 ScreenGui.ResetOnSpawn = false
 ScreenGui.Parent = PlayerGui
 
--- NOTIFICATION HOLDER
+-- Notification Container
 local NotifHolder = Instance.new("Frame")
 NotifHolder.Size = UDim2.new(0,300,1,0)
 NotifHolder.Position = UDim2.new(1,-310,0,10)
 NotifHolder.BackgroundTransparency = 1
 NotifHolder.Parent = ScreenGui
 
-local NotifLayout = Instance.new("UIListLayout")
-NotifLayout.Padding = UDim.new(0,5)
-NotifLayout.Parent = NotifHolder
+local Layout = Instance.new("UIListLayout", NotifHolder)
+Layout.Padding = UDim.new(0,6)
+Layout.SortOrder = Enum.SortOrder.LayoutOrder
 
+-- Notification Function
 function SereneUI:Notify(title,text,time)
 
-	local Notif = Instance.new("Frame")
-	Notif.Size = UDim2.new(1,0,0,60)
-	Notif.BackgroundColor3 = Color3.fromRGB(30,30,30)
-	Notif.Parent = NotifHolder
+    local Notif = Instance.new("Frame")
+    Notif.Size = UDim2.new(1,0,0,60)
+    Notif.BackgroundColor3 = Color3.fromRGB(25,25,25)
+    Notif.Parent = NotifHolder
 
-	local Title = Instance.new("TextLabel")
-	Title.Text = title
-	Title.Font = Enum.Font.GothamBold
-	Title.TextSize = 16
-	Title.TextColor3 = Color3.new(1,1,1)
-	Title.BackgroundTransparency = 1
-	Title.Size = UDim2.new(1,-10,0,20)
-	Title.Position = UDim2.new(0,5,0,5)
-	Title.Parent = Notif
+    local Corner = Instance.new("UICorner",Notif)
+    Corner.CornerRadius = UDim.new(0,8)
 
-	local Desc = Instance.new("TextLabel")
-	Desc.Text = text
-	Desc.Font = Enum.Font.Gotham
-	Desc.TextSize = 14
-	Desc.TextColor3 = Color3.fromRGB(200,200,200)
-	Desc.BackgroundTransparency = 1
-	Desc.Size = UDim2.new(1,-10,0,20)
-	Desc.Position = UDim2.new(0,5,0,30)
-	Desc.Parent = Notif
+    local Title = Instance.new("TextLabel")
+    Title.Text = title
+    Title.Font = Enum.Font.GothamBold
+    Title.TextSize = 14
+    Title.TextColor3 = Color3.new(1,1,1)
+    Title.BackgroundTransparency = 1
+    Title.Size = UDim2.new(1,-10,0,20)
+    Title.Position = UDim2.new(0,5,0,5)
+    Title.Parent = Notif
 
-	task.delay(time or 5,function()
-		Notif:Destroy()
-	end)
+    local Text = Instance.new("TextLabel")
+    Text.Text = text
+    Text.Font = Enum.Font.Gotham
+    Text.TextSize = 13
+    Text.TextColor3 = Color3.fromRGB(200,200,200)
+    Text.BackgroundTransparency = 1
+    Text.Size = UDim2.new(1,-10,0,20)
+    Text.Position = UDim2.new(0,5,0,30)
+    Text.Parent = Notif
+
+    task.delay(time or 3,function()
+        Notif:Destroy()
+    end)
 
 end
 
-function SereneUI:CreateWindow(title)
-
-	local Window = {}
+-- Create Window
+function SereneUI:CreateWindow(name)
+
+    local Window = {}
+
+    local Main = Instance.new("Frame")
+    Main.Size = UDim2.new(0,500,0,350)
+    Main.Position = UDim2.new(0.5,-250,0.5,-175)
+    Main.BackgroundColor3 = Color3.fromRGB(30,30,30)
+    Main.Parent = ScreenGui
+
+    Instance.new("UICorner",Main).CornerRadius = UDim.new(0,10)
+
+    local Title = Instance.new("TextLabel")
+    Title.Text = name
+    Title.Size = UDim2.new(1,0,0,30)
+    Title.BackgroundTransparency = 1
+    Title.TextColor3 = Color3.new(1,1,1)
+    Title.Font = Enum.Font.GothamBold
+    Title.TextSize = 16
+    Title.Parent = Main
+
+    local Tabs = Instance.new("Frame")
+    Tabs.Size = UDim2.new(0,120,1,-30)
+    Tabs.Position = UDim2.new(0,0,0,30)
+    Tabs.BackgroundTransparency = 1
+    Tabs.Parent = Main
+
+    local TabLayout = Instance.new("UIListLayout",Tabs)
+
+    local Pages = Instance.new("Frame")
+    Pages.Size = UDim2.new(1,-120,1,-30)
+    Pages.Position = UDim2.new(0,120,0,30)
+    Pages.BackgroundTransparency = 1
+    Pages.Parent = Main
+
+    function Window:CreateTab(tabName)
+
+        local Tab = {}
+
+        local Button = Instance.new("TextButton")
+        Button.Text = tabName
+        Button.Size = UDim2.new(1,0,0,35)
+        Button.BackgroundColor3 = Color3.fromRGB(40,40,40)
+        Button.TextColor3 = Color3.new(1,1,1)
+        Button.Parent = Tabs
+        Instance.new("UICorner",Button)
 
-	local Main = Instance.new("Frame")
-	Main.Size = UDim2.new(0,500,0,400)
-	Main.Position = UDim2.new(0.5,-250,0.5,-200)
-	Main.BackgroundColor3 = Color3.fromRGB(25,25,25)
-	Main.Parent = ScreenGui
+        local Page = Instance.new("ScrollingFrame")
+        Page.Size = UDim2.new(1,0,1,0)
+        Page.BackgroundTransparency = 1
+        Page.Visible = false
+        Page.Parent = Pages
+        Page.CanvasSize = UDim2.new(0,0,5,0)
 
-	local Top = Instance.new("TextLabel")
-	Top.Size = UDim2.new(1,0,0,30)
-	Top.BackgroundColor3 = Color3.fromRGB(20,20,20)
-	Top.Text = title
-	Top.Font = Enum.Font.GothamBold
-	Top.TextColor3 = Color3.new(1,1,1)
-	Top.Parent = Main
-
-	-- DRAGGING
-
-	local dragging
-	local dragStart
-	local startPos
-
-	Top.InputBegan:Connect(function(input)
-		if input.UserInputType == Enum.UserInputType.MouseButton1 then
-			dragging = true
-			dragStart = input.Position
-			startPos = Main.Position
-		end
-	end)
-
-	UIS.InputChanged:Connect(function(input)
-
-		if dragging and input.UserInputType == Enum.UserInputType.MouseMovement then
-
-			local delta = input.Position - dragStart
-
-			Main.Position = UDim2.new(
-				startPos.X.Scale,
-				startPos.X.Offset + delta.X,
-				startPos.Y.Scale,
-				startPos.Y.Offset + delta.Y
-			)
+        local Layout = Instance.new("UIListLayout",Page)
+        Layout.Padding = UDim.new(0,6)
 
-		end
+        Button.MouseButton1Click:Connect(function()
+            for _,v in pairs(Pages:GetChildren()) do
+                if v:IsA("ScrollingFrame") then
+                    v.Visible = false
+                end
+            end
+            Page.Visible = true
+        end)
 
-	end)
+        -- Button
+        function Tab:Button(name,callback)
 
-	UIS.InputEnded:Connect(function(input)
-		if input.UserInputType == Enum.UserInputType.MouseButton1 then
-			dragging = false
-		end
-	end)
+            local Btn = Instance.new("TextButton")
+            Btn.Size = UDim2.new(1,-10,0,35)
+            Btn.Position = UDim2.new(0,5,0,0)
+            Btn.Text = name
+            Btn.BackgroundColor3 = Color3.fromRGB(50,50,50)
+            Btn.TextColor3 = Color3.new(1,1,1)
+            Btn.Parent = Page
 
-	local TabHolder = Instance.new("Frame")
-	TabHolder.Size = UDim2.new(0,120,1,-30)
-	TabHolder.Position = UDim2.new(0,0,0,30)
-	TabHolder.BackgroundColor3 = Color3.fromRGB(20,20,20)
-	TabHolder.Parent = Main
+            Instance.new("UICorner",Btn)
 
-	local Content = Instance.new("Frame")
-	Content.Size = UDim2.new(1,-120,1,-30)
-	Content.Position = UDim2.new(0,120,0,30)
-	Content.BackgroundTransparency = 1
-	Content.Parent = Main
+            Btn.MouseButton1Click:Connect(function()
+                if callback then
+                    callback()
+                end
+            end)
 
-	local TabLayout = Instance.new("UIListLayout")
-	TabLayout.Parent = TabHolder
+        end
 
-	function Window:CreateTab(name)
+        -- Toggle
+        function Tab:Toggle(name,default,callback)
 
-		local Tab = {}
-		local TabButton = Instance.new("TextButton")
+            local State = default
 
-		TabButton.Size = UDim2.new(1,0,0,30)
-		TabButton.Text = name
-		TabButton.BackgroundColor3 = Color3.fromRGB(40,40,40)
-		TabButton.TextColor3 = Color3.new(1,1,1)
-		TabButton.Parent = TabHolder
+            local Btn = Instance.new("TextButton")
+            Btn.Size = UDim2.new(1,-10,0,35)
+            Btn.Text = name.." : "..tostring(State)
+            Btn.BackgroundColor3 = Color3.fromRGB(50,50,50)
+            Btn.TextColor3 = Color3.new(1,1,1)
+            Btn.Parent = Page
+            Instance.new("UICorner",Btn)
 
-		local Page = Instance.new("Frame")
-		Page.Size = UDim2.new(1,0,1,0)
-		Page.Visible = false
-		Page.BackgroundTransparency = 1
-		Page.Parent = Content
+            Btn.MouseButton1Click:Connect(function()
 
-		local Layout = Instance.new("UIListLayout")
-		Layout.Padding = UDim.new(0,5)
-		Layout.Parent = Page
+                State = not State
+                Btn.Text = name.." : "..tostring(State)
 
-		TabButton.MouseButton1Click:Connect(function()
+                if callback then
+                    callback(State)
+                end
 
-			for _,v in pairs(Content:GetChildren()) do
-				if v:IsA("Frame") then
-					v.Visible = false
-				end
-			end
+            end)
 
-			Page.Visible = true
+        end
 
-		end)
+        -- Slider
+        function Tab:Slider(name,min,max,callback)
 
-		function Tab:CreateSection(title)
+            local Value = min
 
-			local Section = {}
+            local Btn = Instance.new("TextButton")
+            Btn.Size = UDim2.new(1,-10,0,35)
+            Btn.Text = name.." : "..Value
+            Btn.BackgroundColor3 = Color3.fromRGB(50,50,50)
+            Btn.TextColor3 = Color3.new(1,1,1)
+            Btn.Parent = Page
+            Instance.new("UICorner",Btn)
 
-			local Frame = Instance.new("Frame")
-			Frame.Size = UDim2.new(1,-10,0,200)
-			Frame.BackgroundColor3 = Color3.fromRGB(35,35,35)
-			Frame.Parent = Page
+            Btn.MouseButton1Click:Connect(function()
 
-			local Title = Instance.new("TextLabel")
-			Title.Text = title
-			Title.Font = Enum.Font.GothamBold
-			Title.TextColor3 = Color3.new(1,1,1)
-			Title.BackgroundTransparency = 1
-			Title.Size = UDim2.new(1,0,0,20)
-			Title.Parent = Frame
+                Value = math.clamp(Value+1,min,max)
+                Btn.Text = name.." : "..Value
 
-			local Layout = Instance.new("UIListLayout")
-			Layout.Padding = UDim.new(0,4)
-			Layout.Parent = Frame
+                if callback then
+                    callback(Value)
+                end
 
-			function Section:Button(text,color,callback)
+            end)
 
-				local Btn = Instance.new("TextButton")
-				Btn.Size = UDim2.new(1,-10,0,30)
-				Btn.BackgroundColor3 = Colors[color] or Colors.gray
-				Btn.Text = text
-				Btn.TextColor3 = Color3.new(1,1,1)
-				Btn.Parent = Frame
+        end
 
-				Btn.MouseButton1Click:Connect(function()
-					if callback then callback() end
-				end)
+        return Tab
+    end
 
-			end
-
-			function Section:Toggle(text,callback)
-
-				local state = false
-
-				local Btn = Instance.new("TextButton")
-				Btn.Size = UDim2.new(1,-10,0,30)
-				Btn.BackgroundColor3 = Colors.gray
-				Btn.Text = text.." : OFF"
-				Btn.TextColor3 = Color3.new(1,1,1)
-				Btn.Parent = Frame
-
-				Btn.MouseButton1Click:Connect(function()
-
-					state = not state
-					Btn.Text = text.." : "..(state and "ON" or "OFF")
-
-					if callback then
-						callback(state)
-					end
-
-				end)
-
-			end
-
-			function Section:Textbox(name,callback)
-
-				local Box = Instance.new("TextBox")
-				Box.Size = UDim2.new(1,-10,0,30)
-				Box.PlaceholderText = name
-				Box.Text = ""
-				Box.BackgroundColor3 = Colors.gray
-				Box.TextColor3 = Color3.new(1,1,1)
-				Box.Parent = Frame
-
-				Box.FocusLost:Connect(function()
-					if callback then callback(Box.Text) end
-				end)
-
-			end
-
-			function Section:Slider(text,min,max,callback)
-
-				local Btn = Instance.new("TextButton")
-				Btn.Size = UDim2.new(1,-10,0,30)
-				Btn.BackgroundColor3 = Colors.gray
-				Btn.Text = text.." : "..min
-				Btn.TextColor3 = Color3.new(1,1,1)
-				Btn.Parent = Frame
-
-				local value = min
-
-				Btn.MouseButton1Click:Connect(function()
-
-					value += 1
-
-					if value > max then
-						value = min
-					end
-
-					Btn.Text = text.." : "..value
-
-					if callback then callback(value) end
-
-				end)
-
-			end
-
-			function Section:Dropdown(text,options,callback)
-
-				local Btn = Instance.new("TextButton")
-				Btn.Size = UDim2.new(1,-10,0,30)
-				Btn.BackgroundColor3 = Colors.gray
-				Btn.Text = text
-				Btn.TextColor3 = Color3.new(1,1,1)
-				Btn.Parent = Frame
-
-				Btn.MouseButton1Click:Connect(function()
-
-					local choice = options[math.random(1,#options)]
-					Btn.Text = text.." : "..choice
-
-					if callback then callback(choice) end
-
-				end)
-
-			end
-
-			return Section
-
-		end
-
-		return Tab
-
-	end
-
-	return Window
-
+    return Window
 end
 
 return SereneUI
