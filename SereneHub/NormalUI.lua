@@ -9,7 +9,7 @@ local Main = Window:CreateTab("Main")
 local Player = Main:CreateSection("Player")
 
 Player:Button({
-    Name = "Print Hello",
+    Name = "Print Button Test",
     Color = "blue",
     Callback = function()
         print("Hello!")
@@ -17,28 +17,28 @@ Player:Button({
 })
 
 Player:Toggle({
-    Name = "Fly",
+    Name = "Toggle Test",
     Default = false,
     Callback = function(v)
-        print(v)
+        v = print("ive still not done it")
     end
 })
 
 Player:Slider({
-    Name = "Speed",
+    Name = "Slider test",
     Min = 0,
     Max = 100,
     Default = 16,
     Callback = function(v)
-        print(v)
+        v = print("ive still not done it")
     end
 })
 
 Player:Dropdown({
-    Name = "Fruit",
-    Options = {"Apple","Banana","Orange"},
+    Name = "DropDown Test",
+    Options = {"Test 1","Test 2","Test 3"},
     Callback = function(v)
-        print(v)
+        v = print("ive still not done it")
     end
 })
 
