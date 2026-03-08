@@ -4,9 +4,12 @@ local Players = game:GetService("Players")
 local RunService = game:GetService("RunService")
 local UserInputService = game:GetService("UserInputService")
 local Workspace = game:GetService("Workspace")
+local Lighting = game:GetService("Lighting")
+local StarterGui = game:GetService("StarterGui")
 local Camera = Workspace.CurrentCamera
 
 local LocalPlayer = Players.LocalPlayer
+local GuiInset = game:GetService("GuiService"):GetGuiInset()
 
 local Settings = {
     Aimbot = {
@@ -17,7 +20,6 @@ local Settings = {
         TargetPart = "Head",
         ShowFOV = true,
         AimKey = Enum.KeyCode.Q,
-        SilentAim = false,
     },
     Hitbox = {
         Enabled = false,
@@ -33,6 +35,8 @@ local Settings = {
         InfiniteJump = false,
         Noclip = false,
         AutoParkour = false,
+        JumpPower = false,
+        JumpPowerValue = 50,
     },
     Visuals = {
         ESP = false,
@@ -48,6 +52,15 @@ local Settings = {
         ChamsColor = Color3.fromRGB(65, 130, 255),
         ChamsFillTransparency = 0.6,
         ChamsOutlineTransparency = 0,
+        Fullbright = false,
+        Crosshair = false,
+        CrosshairSize = 12,
+        CrosshairColor = Color3.fromRGB(65, 130, 255),
+        CrosshairThickness = 1.5,
+    },
+    Misc = {
+        AntiAFK = true,
+        Gravity = 196.2,
     },
 }
 
@@ -125,13 +138,14 @@ FOVCircle.Thickness = 1.5
 FOVCircle.NumSides = 64
 FOVCircle.Radius = Settings.Aimbot.FOV
 FOVCircle.Filled = false
-FOVCircle.Visible = Settings.Aimbot.ShowFOV
+FOVCircle.Visible = false
 FOVCircle.ZIndex = 999
 FOVCircle.Transparency = 0.7
 FOVCircle.Color = Color3.fromRGB(65, 130, 255)
 
 RunService.RenderStepped:Connect(function()
-    FOVCircle.Position = UserInputService:GetMouseLocation()
+    local mousePos = UserInputService:GetMouseLocation()
+    FOVCircle.Position = mousePos
     FOVCircle.Radius = Settings.Aimbot.FOV
     FOVCircle.Visible = Settings.Aimbot.ShowFOV and Settings.Aimbot.Enabled
 end)
@@ -206,7 +220,6 @@ local function StartFly()
 end
 
 local function StopFly()
-    local char = GetCharacter(LocalPlayer)
     local root = GetRootPart(LocalPlayer)
     if root then
         local bv = root:FindFirstChildOfClass("BodyVelocity")
@@ -243,9 +256,7 @@ RunService.RenderStepped:Connect(function()
         flyBody.Velocity = dir
 
         local gyro = root:FindFirstChild("FlyGyro")
-        if gyro then
-            gyro.CFrame = camCF
-        end
+        if gyro then gyro.CFrame = camCF end
     end
 end)
 
@@ -274,9 +285,11 @@ end)
 RunService.Heartbeat:Connect(function()
     if Settings.Movement.Speed then
         local hum = GetHumanoid(LocalPlayer)
-        if hum then
-            hum.WalkSpeed = Settings.Movement.SpeedValue
-        end
+        if hum then hum.WalkSpeed = Settings.Movement.SpeedValue end
+    end
+    if Settings.Movement.JumpPower then
+        local hum = GetHumanoid(LocalPlayer)
+        if hum then hum.JumpPower = Settings.Movement.JumpPowerValue end
     end
 end)
 
@@ -307,6 +320,83 @@ RunService.Heartbeat:Connect(function()
             end
         end
     end
+end)
+
+local crosshairLines = {}
+for i = 1, 4 do
+    local line = Drawing.new("Line")
+    line.Thickness = Settings.Visuals.CrosshairThickness
+    line.Color = Settings.Visuals.CrosshairColor
+    line.Visible = false
+    line.ZIndex = 998
+    crosshairLines[i] = line
+end
+
+RunService.RenderStepped:Connect(function()
+    if Settings.Visuals.Crosshair then
+        local center = UserInputService:GetMouseLocation()
+        local sz = Settings.Visuals.CrosshairSize
+        local gap = 4
+        local clr = Settings.Visuals.CrosshairColor
+        local thick = Settings.Visuals.CrosshairThickness
+
+        for i = 1, 4 do
+            crosshairLines[i].Color = clr
+            crosshairLines[i].Thickness = thick
+            crosshairLines[i].Visible = true
+        end
+
+        crosshairLines[1].From = Vector2.new(center.X - sz, center.Y)
+        crosshairLines[1].To = Vector2.new(center.X - gap, center.Y)
+        crosshairLines[2].From = Vector2.new(center.X + gap, center.Y)
+        crosshairLines[2].To = Vector2.new(center.X + sz, center.Y)
+        crosshairLines[3].From = Vector2.new(center.X, center.Y - sz)
+        crosshairLines[3].To = Vector2.new(center.X, center.Y - gap)
+        crosshairLines[4].From = Vector2.new(center.X, center.Y + gap)
+        crosshairLines[4].To = Vector2.new(center.X, center.Y + sz)
+    else
+        for i = 1, 4 do
+            crosshairLines[i].Visible = false
+        end
+    end
+end)
+
+local origLightingProps = {
+    Brightness = Lighting.Brightness,
+    ClockTime = Lighting.ClockTime,
+    FogEnd = Lighting.FogEnd,
+    GlobalShadows = Lighting.GlobalShadows,
+}
+
+local function SetFullbright(on)
+    if on then
+        Lighting.Brightness = 2
+        Lighting.ClockTime = 14
+        Lighting.FogEnd = 100000
+        Lighting.GlobalShadows = false
+    else
+        Lighting.Brightness = origLightingProps.Brightness
+        Lighting.ClockTime = origLightingProps.ClockTime
+        Lighting.FogEnd = origLightingProps.FogEnd
+        Lighting.GlobalShadows = origLightingProps.GlobalShadows
+    end
+end
+
+pcall(function()
+    local vu = LocalPlayer:FindFirstChildOfClass("VirtualUser")
+    if not vu then
+        vu = Instance.new("VirtualUser")
+        vu.Parent = LocalPlayer
+    end
+    LocalPlayer.Idled:Connect(function()
+        if Settings.Misc.AntiAFK then
+            local vu2 = LocalPlayer:FindFirstChildOfClass("VirtualUser")
+            if vu2 then
+                vu2:CaptureController()
+                vu2:ClickButton2(Vector2.new())
+            end
+        end
+    end)
 end)
 
 local espObjects = {}
@@ -384,6 +474,8 @@ local function CreateESPForPlayer(player)
 end
 
 local function UpdateESP()
+    local viewSize = Camera.ViewportSize
+
     for player, data in pairs(espObjects) do
         local char = GetCharacter(player)
         local root = char and char:FindFirstChild("HumanoidRootPart")
@@ -450,12 +542,13 @@ local function UpdateESP()
             end
 
             if data.Tracer and Settings.Visuals.Tracers then
-                local viewSize = Camera.ViewportSize
-                local fromPos = Vector2.new(viewSize.X / 2, viewSize.Y)
+                local fromPos
                 if Settings.Visuals.TracerOrigin == "Center" then
                     fromPos = Vector2.new(viewSize.X / 2, viewSize.Y / 2)
                 elseif Settings.Visuals.TracerOrigin == "Mouse" then
                     fromPos = UserInputService:GetMouseLocation()
+                else
+                    fromPos = Vector2.new(viewSize.X / 2, viewSize.Y - GuiInset.Y)
                 end
                 data.Tracer.From = fromPos
                 data.Tracer.To = Vector2.new(rootScreen.X, rootScreen.Y)
@@ -694,6 +787,43 @@ MoveTab:CreateSlider({
 })
 
 MoveTab:CreateDivider()
+MoveTab:CreateSection({ Name = "Jump" })
+
+MoveTab:CreateToggle({
+    Text = "Jump Power",
+    Default = false,
+    Flag = "JumpPowerEnabled",
+    Callback = function(state)
+        Settings.Movement.JumpPower = state
+        if not state then
+            local hum = GetHumanoid(LocalPlayer)
+            if hum then hum.JumpPower = 50 end
+        end
+    end,
+})
+
+MoveTab:CreateSlider({
+    Text = "Jump Height",
+    Min = 50,
+    Max = 300,
+    Default = 50,
+    Increment = 5,
+    Flag = "JumpPowerValue",
+    Callback = function(val)
+        Settings.Movement.JumpPowerValue = val
+    end,
+})
+
+MoveTab:CreateToggle({
+    Text = "Infinite Jump",
+    Default = false,
+    Flag = "InfJump",
+    Callback = function(state)
+        Settings.Movement.InfiniteJump = state
+    end,
+})
+
+MoveTab:CreateDivider()
 MoveTab:CreateSection({ Name = "Flight" })
 
 MoveTab:CreateToggle({
@@ -703,11 +833,7 @@ MoveTab:CreateToggle({
     Tooltip = "WASD to move, Space/Shift for up/down",
     Callback = function(state)
         Settings.Movement.Fly = state
-        if state then
-            StartFly()
-        else
-            StopFly()
-        end
+        if state then StartFly() else StopFly() end
     end,
 })
 
@@ -725,15 +851,6 @@ MoveTab:CreateSlider({
 
 MoveTab:CreateDivider()
 MoveTab:CreateSection({ Name = "Misc Movement" })
-
-MoveTab:CreateToggle({
-    Text = "Infinite Jump",
-    Default = false,
-    Flag = "InfJump",
-    Callback = function(state)
-        Settings.Movement.InfiniteJump = state
-    end,
-})
 
 MoveTab:CreateToggle({
     Text = "Noclip",
@@ -765,6 +882,48 @@ MoveTab:CreateToggle({
     end,
 })
 
+MoveTab:CreateButton({
+    Text = "Teleport to Closest Player",
+    Tooltip = "Teleports you to the nearest player",
+    Callback = function()
+        local root = GetRootPart(LocalPlayer)
+        if not root then return end
+
+        local closestDist = math.huge
+        local closestRoot = nil
+
+        for _, player in ipairs(Players:GetPlayers()) do
+            if player ~= LocalPlayer and IsAlive(player) then
+                local pRoot = GetRootPart(player)
+                if pRoot then
+                    local d = (root.Position - pRoot.Position).Magnitude
+                    if d < closestDist then
+                        closestDist = d
+                        closestRoot = pRoot
+                    end
+                end
+            end
+        end
+
+        if closestRoot then
+            root.CFrame = closestRoot.CFrame * CFrame.new(0, 0, 5)
+            Window:Notify({
+                Title = "Teleported",
+                Message = "Moved to nearest player (" .. math.floor(closestDist) .. "m away)",
+                Type = "success",
+                Duration = 2,
+            })
+        else
+            Window:Notify({
+                Title = "No Target",
+                Message = "No valid players found.",
+                Type = "warning",
+                Duration = 2,
+            })
+        end
+    end,
+})
+
 local VisualsTab = Window:CreateTab({ Name = "Visuals", Icon = "👁" })
 
 VisualsTab:CreateSection({ Name = "ESP Master" })
@@ -776,11 +935,7 @@ VisualsTab:CreateToggle({
     Tooltip = "Master toggle for all ESP features",
     Callback = function(state)
         Settings.Visuals.ESP = state
-        if state then
-            RefreshAllESP()
-        else
-            ClearESP()
-        end
+        if state then RefreshAllESP() else ClearESP() end
     end,
 })
 
@@ -814,36 +969,28 @@ VisualsTab:CreateToggle({
     Text = "Box ESP",
     Default = false,
     Flag = "BoxESP",
-    Callback = function(state)
-        Settings.Visuals.BoxESP = state
-    end,
+    Callback = function(state) Settings.Visuals.BoxESP = state end,
 })
 
 VisualsTab:CreateToggle({
     Text = "Name ESP",
     Default = false,
     Flag = "NameESP",
-    Callback = function(state)
-        Settings.Visuals.NameESP = state
-    end,
+    Callback = function(state) Settings.Visuals.NameESP = state end,
 })
 
 VisualsTab:CreateToggle({
     Text = "Health Bars",
     Default = false,
     Flag = "HealthBar",
-    Callback = function(state)
-        Settings.Visuals.HealthBar = state
-    end,
+    Callback = function(state) Settings.Visuals.HealthBar = state end,
 })
 
 VisualsTab:CreateToggle({
     Text = "Tracers",
     Default = false,
     Flag = "Tracers",
-    Callback = function(state)
-        Settings.Visuals.Tracers = state
-    end,
+    Callback = function(state) Settings.Visuals.Tracers = state end,
 })
 
 VisualsTab:CreateDropdown({
@@ -851,18 +998,14 @@ VisualsTab:CreateDropdown({
     Items = { "Bottom", "Center", "Mouse" },
     Default = "Bottom",
     Flag = "TracerOrigin",
-    Callback = function(selected)
-        Settings.Visuals.TracerOrigin = selected
-    end,
+    Callback = function(selected) Settings.Visuals.TracerOrigin = selected end,
 })
 
 VisualsTab:CreateToggle({
     Text = "Show Distance",
     Default = false,
     Flag = "ShowDistance",
-    Callback = function(state)
-        Settings.Visuals.Distance = state
-    end,
+    Callback = function(state) Settings.Visuals.Distance = state end,
 })
 
 VisualsTab:CreateDivider()
@@ -873,18 +1016,14 @@ VisualsTab:CreateToggle({
     Default = false,
     Flag = "ChamsEnabled",
     Tooltip = "Highlight players through walls",
-    Callback = function(state)
-        Settings.Visuals.Chams = state
-    end,
+    Callback = function(state) Settings.Visuals.Chams = state end,
 })
 
 VisualsTab:CreateColorPicker({
     Text = "Chams Color",
     Default = Color3.fromRGB(65, 130, 255),
     Flag = "ChamsColor",
-    Callback = function(color)
-        Settings.Visuals.ChamsColor = color
-    end,
+    Callback = function(color) Settings.Visuals.ChamsColor = color end,
 })
 
 VisualsTab:CreateSlider({
@@ -894,13 +1033,92 @@ VisualsTab:CreateSlider({
     Default = 0.6,
     Increment = 0.05,
     Flag = "ChamsFill",
-    Callback = function(val)
-        Settings.Visuals.ChamsFillTransparency = val
+    Callback = function(val) Settings.Visuals.ChamsFillTransparency = val end,
+})
+
+VisualsTab:CreateDivider()
+VisualsTab:CreateSection({ Name = "World" })
+
+VisualsTab:CreateToggle({
+    Text = "Fullbright",
+    Default = false,
+    Flag = "Fullbright",
+    Tooltip = "Removes darkness, fog, and shadows",
+    Callback = function(state)
+        Settings.Visuals.Fullbright = state
+        SetFullbright(state)
     end,
+})
+
+VisualsTab:CreateDivider()
+VisualsTab:CreateSection({ Name = "Crosshair" })
+
+VisualsTab:CreateToggle({
+    Text = "Custom Crosshair",
+    Default = false,
+    Flag = "CrosshairEnabled",
+    Callback = function(state) Settings.Visuals.Crosshair = state end,
+})
+
+VisualsTab:CreateSlider({
+    Text = "Crosshair Size",
+    Min = 4,
+    Max = 30,
+    Default = 12,
+    Increment = 1,
+    Suffix = "px",
+    Flag = "CrosshairSize",
+    Callback = function(val) Settings.Visuals.CrosshairSize = val end,
+})
+
+VisualsTab:CreateColorPicker({
+    Text = "Crosshair Color",
+    Default = Color3.fromRGB(65, 130, 255),
+    Flag = "CrosshairColor",
+    Callback = function(color) Settings.Visuals.CrosshairColor = color end,
 })
 
 local SettingsTab = Window:CreateTab({ Name = "Settings", Icon = "🔧" })
 
+SettingsTab:CreateSection({ Name = "UI Settings" })
+
+SettingsTab:CreateToggle({
+    Text = "Background Blur",
+    Default = true,
+    Flag = "BackgroundBlur",
+    Tooltip = "Toggle the blur effect behind the UI",
+    Callback = function(state)
+        local blur = Lighting:FindFirstChild("SereneUIBlur")
+        if blur then blur.Enabled = state end
+    end,
+})
+
+SettingsTab:CreateDivider()
+SettingsTab:CreateSection({ Name = "World Settings" })
+
+SettingsTab:CreateSlider({
+    Text = "Gravity",
+    Min = 0,
+    Max = 500,
+    Default = 196,
+    Increment = 1,
+    Flag = "Gravity",
+    Tooltip = "Default Roblox gravity is 196.2",
+    Callback = function(val)
+        Settings.Misc.Gravity = val
+        Workspace.Gravity = val
+    end,
+})
+
+SettingsTab:CreateToggle({
+    Text = "Anti AFK",
+    Default = true,
+    Flag = "AntiAFK",
+    Tooltip = "Prevents being kicked for idling",
+    Callback = function(state) Settings.Misc.AntiAFK = state end,
+})
+
+SettingsTab:CreateDivider()
 SettingsTab:CreateSection({ Name = "Configuration" })
 
 SettingsTab:CreateButton({
@@ -934,6 +1152,39 @@ SettingsTab:CreateButton({
 })
 
 SettingsTab:CreateDivider()
+SettingsTab:CreateSection({ Name = "Server" })
+
+SettingsTab:CreateButton({
+    Text = "Rejoin Server",
+    Tooltip = "Reconnects you to the same server",
+    Callback = function()
+        Window:Notify({
+            Title = "Rejoining...",
+            Message = "Reconnecting to server.",
+            Type = "info",
+            Duration = 2,
+        })
+        task.wait(1)
+        game:GetService("TeleportService"):TeleportToPlaceInstance(game.PlaceId, game.JobId, LocalPlayer)
+    end,
+})
+
+SettingsTab:CreateButton({
+    Text = "Server Hop",
+    Tooltip = "Joins a different server",
+    Callback = function()
+        Window:Notify({
+            Title = "Server Hopping...",
+            Message = "Finding a new server.",
+            Type = "info",
+            Duration = 2,
+        })
+        task.wait(1)
+        game:GetService("TeleportService"):Teleport(game.PlaceId, LocalPlayer)
+    end,
+})
+
+SettingsTab:CreateDivider()
 SettingsTab:CreateSection({ Name = "Cleanup" })
 
 SettingsTab:CreateButton({
@@ -943,23 +1194,31 @@ SettingsTab:CreateButton({
         Settings.Aimbot.Enabled = false
         Settings.Hitbox.Enabled = false
         Settings.Movement.Speed = false
+        Settings.Movement.JumpPower = false
         Settings.Movement.InfiniteJump = false
         Settings.Movement.Noclip = false
         Settings.Movement.AutoParkour = false
         if flyActive then StopFly() end
         Settings.Movement.Fly = false
         Settings.Visuals.ESP = false
+        Settings.Visuals.Crosshair = false
+        Settings.Visuals.Fullbright = false
         ClearESP()
+        SetFullbright(false)
         FOVCircle.Visible = false
+        for i = 1, 4 do crosshairLines[i].Visible = false end
+
+        Workspace.Gravity = 196.2
 
         local hum = GetHumanoid(LocalPlayer)
         if hum then
             hum.WalkSpeed = 16
+            hum.JumpPower = 50
         end
 
         Window:Notify({
             Title = "Reset",
-            Message = "All features disabled.",
+            Message = "All features disabled and defaults restored.",
             Type = "info",
             Icon = "↺",
             Duration = 3,
