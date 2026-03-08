@@ -660,9 +660,9 @@ function SereneUI:CreateWindow(options)
         BackgroundTransparency = 0.85,
         Size = UDim2.new(0, 28, 0, 28),
         Position = UDim2.new(1, -38, 0.5, -14),
-        Font = theme.FontBold,
-        Text = "✕",
-        TextSize = 14,
+        Font = Enum.Font.GothamBold,
+        Text = "X",
+        TextSize = 13,
         TextColor3 = theme.Error,
         AutoButtonColor = false,
         Parent = titleBar,
@@ -868,7 +868,132 @@ function SereneUI:CreateWindow(options)
         end
     end)
 
-    closeBtn.MouseButton1Click:Connect(toggleUI)
+    local confirmOverlay = Util.Create("Frame", {
+        Name = "ConfirmOverlay",
+        BackgroundColor3 = Color3.fromRGB(0, 0, 0),
+        BackgroundTransparency = 0.4,
+        Size = UDim2.new(1, 0, 1, 0),
+        Visible = false,
+        ZIndex = 50,
+        Parent = mainFrame,
+    })
+
+    local confirmBox = Util.Create("Frame", {
+        Name = "ConfirmBox",
+        BackgroundColor3 = theme.Surface,
+        AnchorPoint = Vector2.new(0.5, 0.5),
+        Position = UDim2.new(0.5, 0, 0.5, 0),
+        Size = UDim2.new(0, 300, 0, 140),
+        ZIndex = 51,
+        Parent = confirmOverlay,
+    })
+    Util.Corner(confirmBox, theme.CornerRadiusLarge)
+    Util.Stroke(confirmBox, theme.Border, 1, 0.5)
+    Util.Shadow(confirmBox, 24, 0.5)
+
+    Util.Create("TextLabel", {
+        Name = "Title",
+        BackgroundTransparency = 1,
+        Position = UDim2.new(0, 0, 0, 18),
+        Size = UDim2.new(1, 0, 0, 20),
+        Font = theme.FontBold,
+        Text = "Are you sure?",
+        TextSize = 15,
+        TextColor3 = theme.TextPrimary,
+        ZIndex = 52,
+        Parent = confirmBox,
+    })
+
+    Util.Create("TextLabel", {
+        Name = "Desc",
+        BackgroundTransparency = 1,
+        Position = UDim2.new(0, 0, 0, 42),
+        Size = UDim2.new(1, 0, 0, 16),
+        Font = theme.FontLight,
+        Text = "This will destroy the menu entirely.",
+        TextSize = 12,
+        TextColor3 = theme.TextSecondary,
+        ZIndex = 52,
+        Parent = confirmBox,
+    })
+
+    local confirmYes = Util.Create("TextButton", {
+        Name = "Yes",
+        BackgroundColor3 = theme.Error,
+        Size = UDim2.new(0, 120, 0, 32),
+        Position = UDim2.new(0.5, -125, 1, -50),
+        Font = theme.FontBold,
+        Text = "Destroy",
+        TextSize = 13,
+        TextColor3 = Color3.fromRGB(255, 255, 255),
+        AutoButtonColor = false,
+        ZIndex = 52,
+        Parent = confirmBox,
+    })
+    Util.Corner(confirmYes, theme.CornerRadiusSmall)
+
+    local confirmNo = Util.Create("TextButton", {
+        Name = "No",
+        BackgroundColor3 = theme.Card,
+        Size = UDim2.new(0, 120, 0, 32),
+        Position = UDim2.new(0.5, 5, 1, -50),
+        Font = theme.FontBold,
+        Text = "Cancel",
+        TextSize = 13,
+        TextColor3 = theme.TextPrimary,
+        AutoButtonColor = false,
+        ZIndex = 52,
+        Parent = confirmBox,
+    })
+    Util.Corner(confirmNo, theme.CornerRadiusSmall)
+
+    confirmYes.MouseEnter:Connect(function()
+        Util.TweenFast(confirmYes, { BackgroundColor3 = Color3.fromRGB(255, 60, 60) })
+    end)
+    confirmYes.MouseLeave:Connect(function()
+        Util.TweenFast(confirmYes, { BackgroundColor3 = theme.Error })
+    end)
+    confirmNo.MouseEnter:Connect(function()
+        Util.TweenFast(confirmNo, { BackgroundColor3 = theme.CardHover })
+    end)
+    confirmNo.MouseLeave:Connect(function()
+        Util.TweenFast(confirmNo, { BackgroundColor3 = theme.Card })
+    end)
+
+    local function showConfirm()
+        confirmOverlay.Visible = true
+        confirmBox.Size = UDim2.new(0, 280, 0, 120)
+        confirmBox.BackgroundTransparency = 1
+        confirmOverlay.BackgroundTransparency = 1
+        Util.Tween(confirmOverlay, { BackgroundTransparency = 0.4 }, 0.2)
+        Util.Tween(confirmBox, {
+            Size = UDim2.new(0, 300, 0, 140),
+            BackgroundTransparency = 0,
+        }, 0.25, Enum.EasingStyle.Back)
+    end
+
+    local function hideConfirm()
+        Util.Tween(confirmBox, {
+            Size = UDim2.new(0, 280, 0, 120),
+            BackgroundTransparency = 1,
+        }, 0.2)
+        Util.Tween(confirmOverlay, { BackgroundTransparency = 1 }, 0.2)
+        task.delay(0.25, function()
+            confirmOverlay.Visible = false
+        end)
+    end
+
+    confirmYes.MouseButton1Click:Connect(function()
+        hideConfirm()
+        task.delay(0.25, function()
+            BlurModule.Destroy()
+            screenGui:Destroy()
+        end)
+    end)
+
+    confirmNo.MouseButton1Click:Connect(hideConfirm)
+
+    closeBtn.MouseButton1Click:Connect(showConfirm)
     minBtn.MouseButton1Click:Connect(toggleUI)
 
     function Window:SetTitle(t)
